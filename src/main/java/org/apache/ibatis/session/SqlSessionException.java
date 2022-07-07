@@ -19,6 +19,7 @@ import org.apache.ibatis.exceptions.PersistenceException;
 
 /**
  * @author Clinton Begin
+ * SqlSession异常
  */
 public class SqlSessionException extends PersistenceException {
 

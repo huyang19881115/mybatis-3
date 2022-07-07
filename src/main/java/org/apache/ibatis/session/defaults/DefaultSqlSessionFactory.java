@@ -33,6 +33,8 @@ import org.apache.ibatis.transaction.managed.ManagedTransactionFactory;
 
 /**
  * @author Clinton Begin
+ * 默认的SqlSessionFactory
+ * MybatisPlus 就修改了 Mybaits里面的默认实现
  */
 public class DefaultSqlSessionFactory implements SqlSessionFactory {
 
@@ -42,6 +44,8 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     this.configuration = configuration;
   }
 
+  //最终都会调用2种方法：openSessionFromDataSource,openSessionFromConnection
+  //以下6个方法都会调用openSessionFromDataSource
   @Override
   public SqlSession openSession() {
     return openSessionFromDataSource(configuration.getDefaultExecutorType(), null, false);
@@ -87,18 +91,24 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     return configuration;
   }
 
+
   private SqlSession openSessionFromDataSource(ExecutorType execType, TransactionIsolationLevel level, boolean autoCommit) {
     Transaction tx = null;
     try {
       final Environment environment = configuration.getEnvironment();
       final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
+      //通过事务工厂来产生一个事务
       tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);
+      //生成一个执行器(事务包含在执行器里)
       final Executor executor = configuration.newExecutor(tx, execType);
+      //然后产生一个DefaultSqlSession
       return new DefaultSqlSession(configuration, executor, autoCommit);
     } catch (Exception e) {
+      //如果打开事务出错，则关闭它
       closeTransaction(tx); // may have fetched a connection so lets call close()
       throw ExceptionFactory.wrapException("Error opening session.  Cause: " + e, e);
     } finally {
+      //最后清空错误上下文
       ErrorContext.instance().reset();
     }
   }
@@ -126,6 +136,7 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
   }
 
   private TransactionFactory getTransactionFactoryFromEnvironment(Environment environment) {
+    //如果没有配置事务工厂，则返回托管事务工厂
     if (environment == null || environment.getTransactionFactory() == null) {
       return new ManagedTransactionFactory();
     }

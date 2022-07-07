@@ -31,6 +31,7 @@ import org.apache.ibatis.reflection.ExceptionUtil;
 
 /**
  * @author Larry Meadors
+ *  SqlSession管理员, 可参考SqlSessionManagerTest
  */
 public class SqlSessionManager implements SqlSessionFactory, SqlSession {
 
@@ -337,6 +338,7 @@ public class SqlSessionManager implements SqlSessionFactory, SqlSession {
     }
   }
 
+  //代理模式
   private class SqlSessionInterceptor implements InvocationHandler {
     public SqlSessionInterceptor() {
         // Prevent Synthetic Access
